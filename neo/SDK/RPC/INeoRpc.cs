@@ -21,6 +21,11 @@ namespace Neo.SDK.RPC
         /// </summary>
         SendRawTransaction SendRawTransaction(string rawTransaction);
 
+        /// <summary>
+        /// Returns information of the unspent UTXO assets (e.g. NEO, GAS) at the specified address.
+        /// </summary>
+        GetUnspents GetUnspents(string address);
+
 
     }
 }

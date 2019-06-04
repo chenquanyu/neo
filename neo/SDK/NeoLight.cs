@@ -27,6 +27,18 @@ namespace Neo.SDK
             return rpcHelper.Send<GetAccountState>(request);
         }
 
+        public GetUnspents GetUnspents(string address)
+        {
+            var request = new RPCRequest
+            {
+                Id = 1,
+                Jsonrpc = "2.0",
+                Method = "getunspents",
+                Params = new[] { address }
+            };
+            return rpcHelper.Send<GetUnspents>(request);
+        }
+
         public SendRawTransaction SendRawTransaction(string rawTransaction)
         {
             var request = new RPCRequest
