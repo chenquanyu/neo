@@ -7,11 +7,19 @@ namespace Neo.SDK.RPC
 {
 
     /// <summary>
-    /// Wrappar of NEO API
+    /// Wrappar of NEO APIs
     /// </summary>
     public interface INeoRpc
     {
-        GetAccountState GetAccountState(RPCRequest request);
+        /// <summary>
+        /// Queries global assets (NEO, GAS, and etc.) of the account, according to the account address.
+        /// </summary>
+        GetAccountState GetAccountState(string address);
+
+        /// <summary>
+        /// Broadcasts a transaction over the NEO network.
+        /// </summary>
+        SendRawTransaction SendRawTransaction(string rawTransaction);
 
 
     }

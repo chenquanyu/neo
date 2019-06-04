@@ -15,9 +15,28 @@ namespace Neo.SDK
             rpcHelper = rpc;
         }
 
-        public GetAccountState GetAccountState(RPCRequest request)
+        public GetAccountState GetAccountState(string address)
         {
+            var request = new RPCRequest
+            {
+                Id = 1,
+                Jsonrpc = "2.0",
+                Method = "getaccountstate",
+                Params = new[] { address }
+            };
             return rpcHelper.Send<GetAccountState>(request);
+        }
+
+        public SendRawTransaction SendRawTransaction(string rawTransaction)
+        {
+            var request = new RPCRequest
+            {
+                Id = 1,
+                Jsonrpc = "2.0",
+                Method = "sendrawtransaction",
+                Params = new[] { rawTransaction }
+            };
+            return rpcHelper.Send<SendRawTransaction>(request);
         }
     }
 }
