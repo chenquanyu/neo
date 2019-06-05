@@ -26,6 +26,11 @@ namespace Neo.SDK.RPC
         /// </summary>
         GetUnspents GetUnspents(string address);
 
+        /// <summary>
+        /// Returns the balance of all NEP-5 assets in the specified address.
+        /// </summary>
+        GetNep5Balances GetNep5Balances(string address);
+
 
     }
 }

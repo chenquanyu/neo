@@ -27,6 +27,18 @@ namespace Neo.SDK
             return rpcHelper.Send<GetAccountState>(request);
         }
 
+        public GetNep5Balances GetNep5Balances(string address)
+        {
+            var request = new RPCRequest
+            {
+                Id = 1,
+                Jsonrpc = "2.0",
+                Method = "getnep5balances",
+                Params = new[] { address }
+            };
+            return rpcHelper.Send<GetNep5Balances>(request);
+        }
+
         public GetUnspents GetUnspents(string address)
         {
             var request = new RPCRequest
