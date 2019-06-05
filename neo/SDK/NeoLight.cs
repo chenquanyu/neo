@@ -39,7 +39,7 @@ namespace Neo.SDK
             return rpcHelper.Send<GetUnspents>(request);
         }
 
-        public SendRawTransaction SendRawTransaction(string rawTransaction)
+        public bool SendRawTransaction(string rawTransaction)
         {
             var request = new RPCRequest
             {
@@ -48,7 +48,7 @@ namespace Neo.SDK
                 Method = "sendrawtransaction",
                 Params = new[] { rawTransaction }
             };
-            return rpcHelper.Send<SendRawTransaction>(request);
+            return rpcHelper.Send<bool>(request);
         }
     }
 }

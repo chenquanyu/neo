@@ -5,9 +5,7 @@ using System.Text;
 
 namespace Neo.SDK.RPC.Model
 {
-    public class GetAssetState : RPCResponse<AssetState> { }
-
-    public class AssetState
+    public class GetAssetState
     {
         [JsonProperty(PropertyName = "version")]
         public int Version { get; set; }

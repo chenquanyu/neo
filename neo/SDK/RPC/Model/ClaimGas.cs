@@ -5,9 +5,7 @@ using System.Text;
 
 namespace Neo.SDK.RPC.Model
 {
-    public class ClaimGas : RPCResponse<ClaimResult> { }
-
-    public class ClaimResult
+    public class ClaimGas
     {
         [JsonProperty(PropertyName = "txid")]
         public string TxId { get; set; }

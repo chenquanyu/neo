@@ -1,8 +1,6 @@
-﻿using Neo.IO.Json;
-using Neo.SDK.RPC.Model;
+﻿using Neo.SDK.RPC.Model;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,13 +22,26 @@ namespace Neo.SDK.RPC
         {
             var requestJson = JsonConvert.SerializeObject(request);
             var result = await httpClient.PostAsync(new Uri(url), new StringContent(requestJson, Encoding.UTF8));
-            var response = await result.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(response);
+            var content = await result.Content.ReadAsStringAsync();
+            var response = JsonConvert.DeserializeObject<RPCResponse<T>>(content);
+            if (response.Error != null)
+            {
+                throw new NeoSdkException(response.Error.Code, response.Error.Message, response.Error.Data);
+            }
+
+            return response.Result;
         }
 
         public T Send<T>(RPCRequest request)
         {
-            return SendAsync<T>(request).ConfigureAwait(false).GetAwaiter().GetResult();
+            try
+            {
+                return SendAsync<T>(request).Result;
+            }
+            catch (AggregateException ex)
+            {
+                throw ex.GetBaseException();
+            }
         }
 
     }

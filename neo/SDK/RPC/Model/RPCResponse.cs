@@ -5,7 +5,6 @@ using System.Text;
 
 namespace Neo.SDK.RPC.Model
 {
-
     /// <summary>
     /// RPC Response from rpc server
     /// </summary>

@@ -5,9 +5,7 @@ using System.Text;
 
 namespace Neo.SDK.RPC.Model
 {
-    public class GetNep5Balances : RPCResponse<GetNep5BalancesR> { }
-
-    public class GetNep5BalancesR
+    public class GetNep5Balances
     {
         [JsonProperty(PropertyName = "address")]
         public string Address { get; set; }

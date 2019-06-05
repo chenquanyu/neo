@@ -19,7 +19,7 @@ namespace Neo.SDK.RPC
         /// <summary>
         /// Broadcasts a transaction over the NEO network.
         /// </summary>
-        SendRawTransaction SendRawTransaction(string rawTransaction);
+        bool SendRawTransaction(string rawTransaction);
 
         /// <summary>
         /// Returns information of the unspent UTXO assets (e.g. NEO, GAS) at the specified address.

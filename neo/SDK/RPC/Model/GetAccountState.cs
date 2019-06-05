@@ -5,9 +5,7 @@ using System.Text;
 
 namespace Neo.SDK.RPC.Model
 {
-    public class GetAccountState : RPCResponse<AccountState> { }
-
-    public class AccountState
+    public class GetAccountState
     {
         [JsonProperty(PropertyName = "version")]
         public int Version { get; set; }
