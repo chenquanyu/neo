@@ -27,6 +27,18 @@ namespace Neo.SDK
             return rpcHelper.Send<GetAccountState>(request);
         }
 
+        public GetClaimable GetClaimable(string address)
+        {
+            var request = new RPCRequest
+            {
+                Id = 1,
+                Jsonrpc = "2.0",
+                Method = "getclaimable",
+                Params = new[] { address }
+            };
+            return rpcHelper.Send<GetClaimable>(request);
+        }
+
         public GetNep5Balances GetNep5Balances(string address)
         {
             var request = new RPCRequest

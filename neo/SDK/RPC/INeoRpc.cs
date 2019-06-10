@@ -31,6 +31,10 @@ namespace Neo.SDK.RPC
         /// </summary>
         GetNep5Balances GetNep5Balances(string address);
 
+        /// <summary>
+        /// Returns claimable GAS information of the specified address.
+        /// </summary>
+        GetClaimable GetClaimable(string address);
 
     }
 }

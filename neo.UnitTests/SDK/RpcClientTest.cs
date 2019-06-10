@@ -52,22 +52,22 @@ namespace Neo.UnitTests.SDK
 
             Stopwatch stopwatch = new Stopwatch();
 
-            stopwatch.Restart();
-            var response2 = light2.GetAccountState("AJBENSwajTzQtwyJFkiJSv7MAaaMc7DsRz");
-            Console.Write($"RestHelper cost {stopwatch.ElapsedMilliseconds}ms");
+            GetAccountState response = null;
+            GetAccountState response2 = null;
 
             stopwatch.Restart();
-            var response = light1.GetAccountState("AJBENSwajTzQtwyJFkiJSv7MAaaMc7DsRz");
+            for (int i = 0; i < 10; i++)
+            {
+                response = light1.GetAccountState("AJBENSwajTzQtwyJFkiJSv7MAaaMc7DsRz");
+            }
             Console.Write($"RpcHelper cost {stopwatch.ElapsedMilliseconds}ms");
 
             stopwatch.Restart();
-            response = light1.GetAccountState("AJBENSwajTzQtwyJFkiJSv7MAaaMc7DsRz");
-            Console.Write($"RpcHelper cost {stopwatch.ElapsedMilliseconds}ms");
-
-            stopwatch.Restart();
-            response2 = light2.GetAccountState("AJBENSwajTzQtwyJFkiJSv7MAaaMc7DsRz");
+            for (int i = 0; i < 10; i++)
+            {
+                response2 = light2.GetAccountState("AJBENSwajTzQtwyJFkiJSv7MAaaMc7DsRz");
+            }
             Console.Write($"RestHelper cost {stopwatch.ElapsedMilliseconds}ms");
-
 
             Assert.AreEqual(0, response.Version);
             Assert.AreEqual(0, response2.Version);
