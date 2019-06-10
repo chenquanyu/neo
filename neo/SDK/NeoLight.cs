@@ -8,9 +8,9 @@ namespace Neo.SDK
 {
     public class NeoLight : INeoRpc
     {
-        private readonly RpcHelper rpcHelper;
+        private readonly IRpcService rpcHelper;
 
-        public NeoLight(RpcHelper rpc)
+        public NeoLight(IRpcService rpc)
         {
             rpcHelper = rpc;
         }

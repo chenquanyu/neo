@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Neo.SDK.RPC
 {
-    public class RpcHelper
+    public class RpcHelper : IRpcService
     {
         private readonly string url;
         private readonly HttpClient httpClient;
