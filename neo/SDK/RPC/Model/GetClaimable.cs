@@ -7,12 +7,14 @@ namespace Neo.SDK.RPC.Model
 {
     public class GetClaimable
     {
+        [JsonProperty(PropertyName = "claimable")]
+        public Claimable[] Claimables { get; set; }
+
         [JsonProperty(PropertyName = "address")]
         public string Address { get; set; }
 
         [JsonProperty(PropertyName = "unclaimed")]
-        public decimal UnClaimed { get; set; }
-
+        public decimal Unclaimed { get; set; }
     }
 
     public class Claimable
@@ -39,9 +41,6 @@ namespace Neo.SDK.RPC.Model
         public decimal SysFee { get; set; }
 
         [JsonProperty(PropertyName = "unclaimed")]
-        public decimal UnClaimed { get; set; }
-
+        public decimal Unclaimed { get; set; }
     }
-
-
 }
