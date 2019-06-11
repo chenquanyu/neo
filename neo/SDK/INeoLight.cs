@@ -13,7 +13,7 @@ namespace Neo.SDK
         /// <summary>
         /// Transfer Asset
         /// </summary>
-        void SendAsset(WalletAccount from, string toAddress, Dictionary<UIntBase, decimal> intents, decimal fee);
+        void TransferAsset(WalletAccount from, string toAddress, Dictionary<UIntBase, decimal> intents, decimal fee);
 
         /// <summary>
         /// Claim GAS
