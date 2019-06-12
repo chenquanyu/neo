@@ -6,11 +6,11 @@ using System.Text;
 
 namespace Neo.SDK
 {
-    public class NeoLight : INeoRpc
+    public class RpcClient : IRpcClient
     {
         private readonly IRpcService rpcHelper;
 
-        public NeoLight(IRpcService rpc)
+        public RpcClient(IRpcService rpc)
         {
             rpcHelper = rpc;
         }

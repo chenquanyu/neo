@@ -9,7 +9,7 @@ namespace Neo.SDK.RPC
     /// <summary>
     /// Wrappar of NEO APIs
     /// </summary>
-    public interface INeoRpc
+    public interface IRpcClient
     {
         /// <summary>
         /// Queries global assets (NEO, GAS, and etc.) of the account, according to the account address.

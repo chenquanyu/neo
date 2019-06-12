@@ -19,9 +19,9 @@ namespace Neo.SDK.TX
     /// </summary>
     public class TransactionHelper
     {
-        private readonly INeoRpc _neoRpc;
+        private readonly IRpcClient _neoRpc;
 
-        public TransactionHelper(INeoRpc neoRpc)
+        public TransactionHelper(IRpcClient neoRpc)
         {
             _neoRpc = neoRpc;
         }
@@ -39,10 +39,10 @@ namespace Neo.SDK.TX
             UtxoBalance balance = _neoRpc.GetUnspents(fromStr).Balances.Where(b => UInt256.Parse(b.AssetHash) == assetId).SingleOrDefault();
             if (balance == default(UtxoBalance)) return null;
             Coin[] coins = balance.Unspents.Select(u => new Coin()
-                {
-                    Reference = new CoinReference() { PrevHash = UInt256.Parse(u.TxId), PrevIndex = ushort.Parse(u.N.ToString()) },
-                    Output = new TransactionOutput() { AssetId = assetId, ScriptHash = from, Value = Fixed8.FromDecimal(u.Value) }
-                }).ToArray();
+            {
+                Reference = new CoinReference() { PrevHash = UInt256.Parse(u.TxId), PrevIndex = ushort.Parse(u.N.ToString()) },
+                Output = new TransactionOutput() { AssetId = assetId, ScriptHash = from, Value = Fixed8.FromDecimal(u.Value) }
+            }).ToArray();
             Fixed8 sum = coins.Sum(p => p.Output.Value);
             if (sum < amount) return null;
             if (sum == amount) return coins;
@@ -88,21 +88,21 @@ namespace Neo.SDK.TX
 
         //=========================================================================================================
 
-        public ContractTransaction CreateContractTransaction(UInt256 assetId, UInt160 from, UInt160 to, Fixed8 amount, 
+        public ContractTransaction CreateContractTransaction(UInt256 assetId, UInt160 from, UInt160 to, Fixed8 amount,
             UInt160 changeAddress = null, Fixed8 fee = default(Fixed8), List<TransactionAttribute> attributes = null)
         {
             ContractTransaction ctx = new ContractTransaction();
 
             ctx.Inputs = new CoinReference[0];
             ctx.Outputs = new TransactionOutput[] { new TransactionOutput() { AssetId = assetId, Value = amount, ScriptHash = to } };
-            ctx.Attributes = attributes==null ? new List<TransactionAttribute>().ToArray() : attributes.ToArray();
+            ctx.Attributes = attributes == null ? new List<TransactionAttribute>().ToArray() : attributes.ToArray();
             ctx.Witnesses = new Witness[0];
 
             ctx = MakeTransaction(ctx, from, changeAddress, fee);
             return ctx;
         }
 
-        public InvocationTransaction CreateInvocationTransaction(UInt160 assetId, UInt160 from, UInt160 to, BigDecimal amount, 
+        public InvocationTransaction CreateInvocationTransaction(UInt160 assetId, UInt160 from, UInt160 to, BigDecimal amount,
             UInt160 changeAddress = null, Fixed8 fee = default(Fixed8), List<TransactionAttribute> attributes = null)
         {
             InvocationTransaction tx;
