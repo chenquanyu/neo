@@ -54,7 +54,7 @@ namespace Neo.SDK.Wallets
 
         public Account CreateAccount(string password, KeyPair pair)
         {
-            return CreateAccount(DefaultLabel, password, pair, ScryptDefault.N, ScryptDefault.R, ScryptDefault.P);
+            return CreateAccount(DefaultLabel, password, pair, ScryptN, ScryptR, ScryptP);
         }
 
         public WalletFile CreateWallet(string name, string version, int n, int r, int p, object extra = null)
