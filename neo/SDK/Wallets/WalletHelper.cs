@@ -12,8 +12,13 @@ namespace Neo.SDK.Wallets
 {
     public class WalletHelper
     {
-        public static string DefaultLabel = "NeoSdkAccount";
-        public static ScryptParams ScryptDefault { get; } = new ScryptParams { N = 16384, R = 8, P = 8 };
+        public const string DefaultLabel = "NeoSdkAccount";
+        public const string DefaultWalletName = "NeoSdkWallet";
+        public const string DefaultVersion = "1.0";
+
+        public const int ScryptN = 16384;
+        public const int ScryptR = 8;
+        public const int ScryptP = 8;
 
         public KeyPair CreateKeyPair()
         {
@@ -52,10 +57,23 @@ namespace Neo.SDK.Wallets
             return CreateAccount(DefaultLabel, password, pair, ScryptDefault.N, ScryptDefault.R, ScryptDefault.P);
         }
 
-        public WalletFile CreateWallet()
+        public WalletFile CreateWallet(string name, string version, int n, int r, int p, object extra = null)
         {
-            throw new NotImplementedException();
+            return new WalletFile
+            {
+                Name = name,
+                Version = version,
+                Scrypt = new ScryptParams { N = n, R = r, P = p },
+                Accounts = new List<Account>(),
+                Extra = extra
+            };
         }
+
+        public WalletFile CreateStandardWallet()
+        {
+            return CreateWallet(DefaultWalletName, DefaultVersion, ScryptN, ScryptR, ScryptP);
+        }
+
 
     }
 }

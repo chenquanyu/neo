@@ -21,7 +21,7 @@ namespace Neo.SDK.Wallets
         public ScryptParams Scrypt { get; set; }
 
         [JsonProperty(PropertyName = "accounts")]
-        public Account[] Accounts { get; set; }
+        public List<Account> Accounts { get; set; }
 
         [JsonProperty(PropertyName = "extra")]
         public object Extra { get; set; }
