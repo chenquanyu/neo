@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Neo.SDK.Wallets
+namespace Neo.SDK.WalletFile
 {
 
     /// <summary>

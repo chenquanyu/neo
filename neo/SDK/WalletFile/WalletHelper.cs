@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using static Neo.SDK.Wallets.WalletFile;
+using static Neo.SDK.WalletFile.WalletFile;
 
-namespace Neo.SDK.Wallets
+namespace Neo.SDK.WalletFile
 {
     public class WalletHelper
     {
