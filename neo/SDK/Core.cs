@@ -1,7 +1,7 @@
 ﻿using Neo.Network.P2P.Payloads;
 using Neo.SDK.RPC;
 using Neo.SDK.RPC.Model;
-using Neo.SDK.SdkWallet;
+using Neo.SDK.Wallet;
 using System;
 using System.Collections.Generic;
 
