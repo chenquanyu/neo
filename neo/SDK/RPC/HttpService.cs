@@ -18,7 +18,7 @@ namespace Neo.SDK.RPC
             httpClient = new HttpClient();
         }
 
-        public async Task<T> SendAsync<T>(RPCRequest request)
+        public async Task<T> SendAsync<T>(object request)
         {
             var requestJson = JsonConvert.SerializeObject(request);
             var result = await httpClient.PostAsync(new Uri(url), new StringContent(requestJson, Encoding.UTF8));
@@ -32,7 +32,7 @@ namespace Neo.SDK.RPC
             return response.Result;
         }
 
-        public T Send<T>(RPCRequest request)
+        public T Send<T>(object request)
         {
             try
             {

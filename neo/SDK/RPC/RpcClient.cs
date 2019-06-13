@@ -1,5 +1,6 @@
 ﻿using Neo.SDK.RPC;
 using Neo.SDK.RPC.Model;
+using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,64 +16,56 @@ namespace Neo.SDK
             rpcHelper = rpc;
         }
 
-        public GetAccountState GetAccountState(string address)
+        private T RpcSend<T>(string method, params object[] paraArgs)
         {
             var request = new RPCRequest
             {
                 Id = 1,
                 Jsonrpc = "2.0",
-                Method = "getaccountstate",
-                Params = new[] { address }
+                Method = method,
+                Params = paraArgs
             };
-            return rpcHelper.Send<GetAccountState>(request);
+            return rpcHelper.Send<T>(request);
+        }
+
+        public GetAccountState GetAccountState(string address)
+        {
+            return RpcSend<GetAccountState>("getaccountstate", address);
         }
 
         public GetClaimable GetClaimable(string address)
         {
-            var request = new RPCRequest
-            {
-                Id = 1,
-                Jsonrpc = "2.0",
-                Method = "getclaimable",
-                Params = new[] { address }
-            };
-            return rpcHelper.Send<GetClaimable>(request);
+            return RpcSend<GetClaimable>("getclaimable", address);
         }
 
         public GetNep5Balances GetNep5Balances(string address)
         {
-            var request = new RPCRequest
-            {
-                Id = 1,
-                Jsonrpc = "2.0",
-                Method = "getnep5balances",
-                Params = new[] { address }
-            };
-            return rpcHelper.Send<GetNep5Balances>(request);
+            return RpcSend<GetNep5Balances>("getnep5balances", address);
         }
 
         public GetUnspents GetUnspents(string address)
         {
-            var request = new RPCRequest
-            {
-                Id = 1,
-                Jsonrpc = "2.0",
-                Method = "getunspents",
-                Params = new[] { address }
-            };
-            return rpcHelper.Send<GetUnspents>(request);
+            return RpcSend<GetUnspents>("getunspents", address);
+        }
+
+        public InvokeRet Invoke(string address, Stack[] stacks)
+        {
+            return RpcSend<InvokeRet>("invoke", address, stacks);
+        }
+
+        public InvokeRet InvokeFunction(string address, string function, Stack[] stacks)
+        {
+            return RpcSend<InvokeRet>("invokefunction", address, function, stacks);
+        }
+
+        public InvokeRet InvokeScript(string script)
+        {
+            return RpcSend<InvokeRet>("invokescript", script);
         }
 
         public bool SendRawTransaction(string rawTransaction)
         {
-            var request = new RPCRequest
-            {
-                Id = 1,
-                Jsonrpc = "2.0",
-                Method = "sendrawtransaction",
-                Params = new[] { rawTransaction }
-            };
-            return rpcHelper.Send<bool>(request);
+            return RpcSend<bool>("sendrawtransaction", rawTransaction);
         }
     }
 }

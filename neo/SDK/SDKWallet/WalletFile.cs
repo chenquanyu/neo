@@ -3,9 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Neo.SDK.WalletFile
+namespace Neo.SDK.SdkWallet
 {
-
     /// <summary>
     /// NEP-6 Wallet File Model
     /// </summary>

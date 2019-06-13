@@ -1,14 +1,10 @@
-﻿using Neo.Network.P2P.Payloads;
-using Neo.SmartContract;
+﻿using Neo.SmartContract;
 using Neo.Wallets;
-using Neo.Wallets.NEP6;
-using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Text;
-using static Neo.SDK.WalletFile.WalletFile;
+using static Neo.SDK.SdkWallet.WalletFile;
 
-namespace Neo.SDK.WalletFile
+namespace Neo.SDK.SdkWallet
 {
     public class WalletHelper
     {

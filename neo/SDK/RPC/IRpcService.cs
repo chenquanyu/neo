@@ -8,8 +8,8 @@ namespace Neo.SDK.RPC
 {
     public interface IRpcService
     {
-        Task<T> SendAsync<T>(RPCRequest request);
+        Task<T> SendAsync<T>(object request);
 
-        T Send<T>(RPCRequest request);
+        T Send<T>(object request);
     }
 }
