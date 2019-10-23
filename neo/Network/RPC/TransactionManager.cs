@@ -17,8 +17,7 @@ namespace Neo.Network.RPC
     /// </summary>
     public class TransactionManager
     {
-        private static readonly Random rand = new Random();
-        private readonly NeoAPI neoAPI;
+        private readonly RpcClientTools neoAPI;
         private readonly UInt160 sender;
 
         /// <summary>
@@ -38,7 +37,7 @@ namespace Neo.Network.RPC
         /// <param name="sender">the account script hash of sender</param>
         public TransactionManager(RpcClient rpc, UInt160 sender)
         {
-            neoAPI = new NeoAPI(rpc);
+            neoAPI = new RpcClientTools(rpc);
             this.sender = sender;
         }
 
@@ -52,11 +51,12 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public TransactionManager MakeTransaction(byte[] script, TransactionAttribute[] attributes = null, Cosigner[] cosigners = null, long networkFee = 0)
         {
+            var random = new Random();
             uint height = neoAPI.RpcClient.GetBlockCount() - 1;
             Tx = new Transaction
             {
                 Version = 0,
-                Nonce = (uint)rand.Next(),
+                Nonce = (uint)random.Next(),
                 Script = script,
                 Sender = sender,
                 ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
