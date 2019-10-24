@@ -13,7 +13,7 @@ namespace Neo.UnitTests.Network.RPC
         KeyPair key2;
         string address1;
         string address2;
-        NeoAPI neoAPI;
+        RpcClientTools neoAPI;
 
         [TestInitialize]
         public void TestSetup()
@@ -22,7 +22,7 @@ namespace Neo.UnitTests.Network.RPC
             key2 = "L3TbPZ3Gtqh3TTk2CWn44m9iiuUhBGZWoDJQuvVw5Zbx5NAjPbdb".ToKeyPair();
             address1 = Neo.Wallets.Helper.ToAddress(key1.ToScriptHash()); // "AJoQgnkK1i7YSAvFbPiPhwtgdccbaQ7rgq"
             address2 = Neo.Wallets.Helper.ToAddress(key2.ToScriptHash()); // "AKviBGFhWeS8xrAH3hqDQufZXE9QM5pCeP"
-            neoAPI = new NeoAPI(new RpcClient("http://127.0.0.1:20332"));
+            neoAPI = new RpcClientTools(new RpcClient("http://127.0.0.1:20332"));
         }
         [TestMethod]
         public void IntegrationTestTransfer()
@@ -46,7 +46,7 @@ namespace Neo.UnitTests.Network.RPC
         public void IntegrationTestGetTokenInfo()
         {
             RpcClient client = new RpcClient("http://127.0.0.1:20332");
-            NeoAPI neoAPI = new NeoAPI(client);
+            RpcClientTools neoAPI = new RpcClientTools(client);
 
             var neoInfo = neoAPI.Nep5API.GetTokenInfo(NativeContract.NEO.Hash);
             var gasInfo = neoAPI.Nep5API.GetTokenInfo(NativeContract.GAS.Hash);

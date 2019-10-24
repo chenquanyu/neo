@@ -48,7 +48,7 @@ namespace Neo.UnitTests.Network.RPC
             Console.WriteLine($"Transaction {tx.Hash.ToString()} is broadcasted!");
 
             // print a message after the transaction is on chain
-            NeoAPI neoAPI = new NeoAPI(client);
+            RpcClientTools neoAPI = new RpcClientTools(client);
             neoAPI.WaitTransaction(tx)
                .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
@@ -95,7 +95,7 @@ namespace Neo.UnitTests.Network.RPC
             Console.WriteLine($"Transaction {tx.Hash.ToString()} is broadcasted!");
 
             // print a message after the transaction is on chain
-            NeoAPI neoAPI = new NeoAPI(client);
+            RpcClientTools neoAPI = new RpcClientTools(client);
             neoAPI.WaitTransaction(tx)
                .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
@@ -139,7 +139,7 @@ namespace Neo.UnitTests.Network.RPC
             Console.WriteLine($"Transaction {tx.Hash.ToString()} is broadcasted!");
 
             // print a message after the transaction is on chain
-            NeoAPI neoAPI = new NeoAPI(client);
+            RpcClientTools neoAPI = new RpcClientTools(client);
             neoAPI.WaitTransaction(tx)
                .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
@@ -170,6 +170,7 @@ namespace Neo.UnitTests.Network.RPC
         {
             // choose a neo node with rpc opened
             RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
+            //RpcClient client = new RpcClient("http://127.0.0.1:20332");
 
             // get the highest block hash
             string hash = client.GetBestBlockHash();
@@ -178,9 +179,12 @@ namespace Neo.UnitTests.Network.RPC
             uint height = client.GetBlockCount() - 1;
 
             // get block data
-            var block = client.GetBlock(hash);
+            var block = client.GetBlock("166396");
 
-            Console.WriteLine($"{hash},{height},{block.ToJson().ToString()}");
+            // get transaction
+            var transaction = client.GetRawTransaction("0x48ec3d235c6b386eee324a77a10b0f9e8e37d3c1ebb99626f3d1dd70db26d788");
+
+            Console.WriteLine($"{hash}\n{height}\n{block.ToJson().ToString()}\n{transaction.ToJson()}");
         }
 
     }
