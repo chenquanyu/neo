@@ -171,7 +171,7 @@ namespace Neo.UnitTests.Network.RPC
         {
             // choose a neo node with rpc opened
             RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
-            //RpcClient client = new RpcClient("http://127.0.0.1:20332");
+            //RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
 
             // get the highest block hash
             string hash = client.GetBestBlockHash();
