@@ -7,6 +7,7 @@ using Neo.VM;
 using System;
 using System.Security.Cryptography;
 using Neo.SmartContract;
+using Neo.Network.RPC.Models;
 
 namespace Neo.UnitTests.Network.RPC
 {
@@ -179,10 +180,11 @@ namespace Neo.UnitTests.Network.RPC
             uint height = client.GetBlockCount() - 1;
 
             // get block data
-            var block = client.GetBlock("166396");
+            RpcBlock block = client.GetBlock("166396");
+            block = client.GetBlock("0x953f6efa29c740b68c87e0a060942056382a6912a0ddeddc2f6641acb92d9700");
 
             // get transaction
-            var transaction = client.GetRawTransaction("0x48ec3d235c6b386eee324a77a10b0f9e8e37d3c1ebb99626f3d1dd70db26d788");
+            RpcTransaction transaction = client.GetRawTransaction("0x48ec3d235c6b386eee324a77a10b0f9e8e37d3c1ebb99626f3d1dd70db26d788");
 
             Console.WriteLine($"{hash}\n{height}\n{block.ToJson().ToString()}\n{transaction.ToJson()}");
         }
