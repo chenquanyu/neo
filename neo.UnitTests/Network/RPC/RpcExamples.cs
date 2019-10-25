@@ -8,6 +8,11 @@ using System;
 using System.Security.Cryptography;
 using Neo.SmartContract;
 using Neo.Network.RPC.Models;
+using System.Linq;
+using Newtonsoft.Json;
+using Neo.Ledger;
+using Neo.SmartContract.Manifest;
+using System.Numerics;
 
 namespace Neo.UnitTests.Network.RPC
 {
@@ -49,7 +54,7 @@ namespace Neo.UnitTests.Network.RPC
             Console.WriteLine($"Transaction {tx.Hash.ToString()} is broadcasted!");
 
             // print a message after the transaction is on chain
-            RpcClientTools neoAPI = new RpcClientTools(client);
+            WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(tx)
                .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
@@ -96,7 +101,7 @@ namespace Neo.UnitTests.Network.RPC
             Console.WriteLine($"Transaction {tx.Hash.ToString()} is broadcasted!");
 
             // print a message after the transaction is on chain
-            RpcClientTools neoAPI = new RpcClientTools(client);
+            WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(tx)
                .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
@@ -140,7 +145,7 @@ namespace Neo.UnitTests.Network.RPC
             Console.WriteLine($"Transaction {tx.Hash.ToString()} is broadcasted!");
 
             // print a message after the transaction is on chain
-            RpcClientTools neoAPI = new RpcClientTools(client);
+            WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(tx)
                .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
@@ -171,7 +176,6 @@ namespace Neo.UnitTests.Network.RPC
         {
             // choose a neo node with rpc opened
             RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
-            //RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
 
             // get the highest block hash
             string hash = client.GetBestBlockHash();
@@ -187,6 +191,121 @@ namespace Neo.UnitTests.Network.RPC
             RpcTransaction transaction = client.GetRawTransaction("0x48ec3d235c6b386eee324a77a10b0f9e8e37d3c1ebb99626f3d1dd70db26d788");
 
             Console.WriteLine($"{hash}\n{height}\n{block.ToJson().ToString()}\n{transaction.ToJson()}");
+        }
+
+        [TestMethod]
+        public void PolicyMointor()
+        {
+            // choose a neo node with rpc opened
+            PolicyAPI policyAPI = new PolicyAPI(new RpcClient("http://seed1t.neo.org:20332"));
+
+            // get the accounts blocked by policy
+            UInt160[] blockedAccounts = policyAPI.GetBlockedAccounts(); // [], no account is blocked by now
+
+            // get the system fee per byte
+            long feePerByte = policyAPI.GetFeePerByte(); // 1000, 0.00001000 GAS per byte
+
+            // get the max size of one block
+            uint maxBlockSize = policyAPI.GetMaxBlockSize(); // 262144, (1024 * 256) bytes one block
+
+            // get the max transaction count per block
+            uint maxTransactionsPerBlock = policyAPI.GetMaxTransactionsPerBlock(); // 512, max 512 transactions one block
+
+            Console.WriteLine($"{JsonConvert.SerializeObject(blockedAccounts.Select(p => p.ToString()))}\n{feePerByte}\n{maxBlockSize}\n{maxTransactionsPerBlock}");
+        }
+
+        [TestMethod]
+        public void ContractMointor()
+        {
+            // choose a neo node with rpc opened
+            RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
+
+            // get contract state
+            ContractState contractState = client.GetContractState(NativeContract.NEO.Hash.ToString());
+
+            // get nep5 token info
+            Nep5API nep5API = new Nep5API(client);
+            UInt160 scriptHash = NativeContract.NEO.Hash;
+            RpcNep5TokenInfo tokenInfo = nep5API.GetTokenInfo(scriptHash);
+
+            // get nep5 name
+            string name = nep5API.Name(scriptHash);
+
+            // get nep5 symbol
+            string symbol = nep5API.Symbol(scriptHash);
+
+            // get nep5 token decimals
+            uint decimals = nep5API.Decimals(scriptHash);
+
+            // get nep5 token total supply
+            BigInteger totalSupply = nep5API.TotalSupply(scriptHash);
+
+            Console.WriteLine($"{contractState.ToJson().ToString()}\n\n{JsonConvert.SerializeObject(tokenInfo)}\n");
+        }
+
+        [TestMethod]
+        public void ContractDeploy()
+        {
+            // choose a neo node with rpc opened
+            RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
+            ContractClient contractClient = new ContractClient(client);
+
+            // contract script, it should be from compiled file, we use empty byte[] in this example
+            byte[] script = new byte[1];
+
+            // we use default ContractManifest in this example
+            ContractManifest manifest = ContractManifest.CreateDefault(script.ToScriptHash());
+
+            // deploy contract needs sender to pay the system fee
+            KeyPair senderKey = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
+
+            // create the deploy transaction
+            Transaction transaction = contractClient.DeployContract(script, manifest, senderKey);
+
+            // Broadcasts the transaction over the NEO network
+            client.SendRawTransaction(transaction);
+            Console.WriteLine($"Transaction {transaction.Hash.ToString()} is broadcasted!");
+
+            // print a message after the transaction is on chain
+            WalletAPI neoAPI = new WalletAPI(client);
+            neoAPI.WaitTransaction(transaction)
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
+        }
+
+        [TestMethod]
+        public void ContractInvoke()
+        {
+            // choose a neo node with rpc opened
+            RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
+            ContractClient contractClient = new ContractClient(client);
+
+            // get the contract hash
+            UInt160 scriptHash = NativeContract.NEO.Hash;
+
+            // test invoking the method provided by the contract 
+            string name = contractClient.TestInvoke(scriptHash, "name")
+                .Stack.Single().ToStackItem().GetString();
+
+            // contract script, it should be from compiled file, we use empty byte[] in this example
+            byte[] script = new byte[1];
+
+            // we use default ContractManifest in this example
+            ContractManifest manifest = ContractManifest.CreateDefault(script.ToScriptHash());
+
+            // deploy contract needs sender to pay the system fee
+            KeyPair senderKey = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
+
+            // create the deploy transaction
+            Transaction transaction = contractClient.DeployContract(script, manifest, senderKey);
+
+            // Broadcasts the transaction over the NEO network
+            client.SendRawTransaction(transaction);
+            Console.WriteLine($"Transaction {transaction.Hash.ToString()} is broadcasted!");
+
+            // print a message after the transaction is on chain
+            WalletAPI neoAPI = new WalletAPI(client);
+            neoAPI.WaitTransaction(transaction)
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
 
     }
