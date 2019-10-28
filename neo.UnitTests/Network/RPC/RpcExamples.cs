@@ -308,5 +308,40 @@ namespace Neo.UnitTests.Network.RPC
                .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
         }
 
+        [TestMethod]
+        public void WalletAPI()
+        {
+            // choose a neo node with rpc opened
+            RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
+            WalletAPI walletAPI = new WalletAPI(client);
+
+            // get the token balance of account
+            string tokenHash = "0x43cf98eddbe047e198a3e5d57006311442a0ca15";
+            string address = "AJoQgnkK1i7YSAvFbPiPhwtgdccbaQ7rgq";
+            BigInteger tokenBalance = walletAPI.GetTokenBalance(tokenHash, address);
+
+            // get the neo balance
+            uint neoBalance = walletAPI.GetNeoBalance(address);
+
+            // get the neo balance
+            decimal gasBalance = walletAPI.GetGasBalance(address);
+
+            // get the claimable GAS of one address
+            decimal gasAmount = walletAPI.GetUnclaimedGas(address);
+            Console.WriteLine(gasAmount);
+
+            // claiming gas needs the KeyPair of account
+            string wif = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb";
+            Transaction transaction = walletAPI.ClaimGas(wif);
+
+            // transfer 10 neo from wif to address
+            walletAPI.Transfer(tokenHash, wif, address, 10);
+
+            // print a message after the transaction is on chain
+            WalletAPI neoAPI = new WalletAPI(client);
+            neoAPI.WaitTransaction(transaction)
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
+        }
+
     }
 }
