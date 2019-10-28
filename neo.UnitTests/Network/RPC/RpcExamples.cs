@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Neo.Ledger;
 using Neo.SmartContract.Manifest;
 using System.Numerics;
+using Neo.Wallets.NEP6;
 
 namespace Neo.UnitTests.Network.RPC
 {
@@ -56,7 +57,7 @@ namespace Neo.UnitTests.Network.RPC
             // print a message after the transaction is on chain
             WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(tx)
-               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block {(await p).BlockHash}"));
         }
 
         [TestMethod]
@@ -103,7 +104,7 @@ namespace Neo.UnitTests.Network.RPC
             // print a message after the transaction is on chain
             WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(tx)
-               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block {(await p).BlockHash}"));
         }
 
         [TestMethod]
@@ -147,7 +148,7 @@ namespace Neo.UnitTests.Network.RPC
             // print a message after the transaction is on chain
             WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(tx)
-               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block {(await p).BlockHash}"));
         }
 
         [TestMethod]
@@ -167,6 +168,10 @@ namespace Neo.UnitTests.Network.RPC
             // get private key and KeyPair from WIF
             byte[] privateKey1 = Wallet.GetPrivateKeyFromWIF(wif);
             KeyPair keyPair1 = new KeyPair(privateKey1);
+
+            // load wallet from nep6 wallet
+            string path = "3.json";
+            NEP6Wallet wallet = new NEP6Wallet(path);
 
             Assert.AreEqual(keyPair, keyPair1);
         }
@@ -305,7 +310,7 @@ namespace Neo.UnitTests.Network.RPC
             // print a message after the transaction is on chain
             WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(transaction)
-               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block {(await p).BlockHash}"));
         }
 
         [TestMethod]
@@ -340,7 +345,7 @@ namespace Neo.UnitTests.Network.RPC
             // print a message after the transaction is on chain
             WalletAPI neoAPI = new WalletAPI(client);
             neoAPI.WaitTransaction(transaction)
-               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block height {await p}"));
+               .ContinueWith(async (p) => Console.WriteLine($"Transaction is on block {(await p).BlockHash}"));
         }
 
     }
