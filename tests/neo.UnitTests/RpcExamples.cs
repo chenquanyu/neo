@@ -5,7 +5,6 @@ using Neo.SmartContract.Native;
 using Neo.Wallets;
 using Neo.VM;
 using System;
-using System.Security.Cryptography;
 using Neo.SmartContract;
 using Neo.Network.RPC.Models;
 using System.Linq;
@@ -14,6 +13,7 @@ using Neo.Ledger;
 using Neo.SmartContract.Manifest;
 using System.Numerics;
 using Neo.Wallets.NEP6;
+using System.Security.Cryptography;
 
 namespace Neo.UnitTests.Network.RPC
 {
@@ -27,11 +27,11 @@ namespace Neo.UnitTests.Network.RPC
             RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
 
             // get the KeyPair of your account, this account will pay the system and network fee
-            KeyPair sendKey = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
-            UInt160 sender = sendKey.ToScriptHash();
+            KeyPair sendKey = Utility.GetKeyPair("L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb");
+            UInt160 sender = Contract.CreateSignatureRedeemScript(sendKey.PublicKey).ToScriptHash();
 
             // get the scripthash of the account you want to transfer to
-            UInt160 receiver = "AKviBGFhWeS8xrAH3hqDQufZXE9QM5pCeP".ToUInt160();
+            UInt160 receiver = Utility.GetScriptHash("AKviBGFhWeS8xrAH3hqDQufZXE9QM5pCeP");
 
             // construct the script, in this example, we will transfer 1 NEO to receiver
             UInt160 scriptHash = NativeContract.NEO.Hash;
@@ -67,12 +67,12 @@ namespace Neo.UnitTests.Network.RPC
             RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
 
             // get the KeyPair of your account, this account will pay the system and network fee
-            KeyPair sendKey = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
-            UInt160 sender = sendKey.ToScriptHash();
+            KeyPair sendKey = Utility.GetKeyPair("L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb");
+            UInt160 sender = Contract.CreateSignatureContract(sendKey.PublicKey).ScriptHash;
 
             // get the KeyPair of your accounts
-            KeyPair key2 = "L2ynA5aq6KPJjpisXb8pGXnRvgDqYVkgC2Rw85GM51B9W33YcdiZ".ToKeyPair();
-            KeyPair key3 = "L3TbPZ3Gtqh3TTk2CWn44m9iiuUhBGZWoDJQuvVw5Zbx5NAjPbdb".ToKeyPair();
+            KeyPair key2 = Utility.GetKeyPair("L2ynA5aq6KPJjpisXb8pGXnRvgDqYVkgC2Rw85GM51B9W33YcdiZ");
+            KeyPair key3 = Utility.GetKeyPair("L3TbPZ3Gtqh3TTk2CWn44m9iiuUhBGZWoDJQuvVw5Zbx5NAjPbdb");
 
             // create multi-signature contract, this contract needs at least 2 KeyPairs to sign
             Contract multiContract = Contract.CreateMultiSigContract(2, sendKey.PublicKey, key2.PublicKey, key3.PublicKey);
@@ -114,9 +114,9 @@ namespace Neo.UnitTests.Network.RPC
             RpcClient client = new RpcClient("http://seed1t.neo.org:20332");
 
             // get the KeyPair of your account
-            KeyPair receiverKey = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
-            KeyPair key2 = "L2ynA5aq6KPJjpisXb8pGXnRvgDqYVkgC2Rw85GM51B9W33YcdiZ".ToKeyPair();
-            KeyPair key3 = "L3TbPZ3Gtqh3TTk2CWn44m9iiuUhBGZWoDJQuvVw5Zbx5NAjPbdb".ToKeyPair();
+            KeyPair receiverKey = Utility.GetKeyPair("L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb");
+            KeyPair key2 = Utility.GetKeyPair("L2ynA5aq6KPJjpisXb8pGXnRvgDqYVkgC2Rw85GM51B9W33YcdiZ");
+            KeyPair key3 = Utility.GetKeyPair("L3TbPZ3Gtqh3TTk2CWn44m9iiuUhBGZWoDJQuvVw5Zbx5NAjPbdb");
 
             // create multi-signature contract, this contract needs at least 2 KeyPairs to sign
             Contract multiContract = Contract.CreateMultiSigContract(2, receiverKey.PublicKey, key2.PublicKey, key3.PublicKey);
@@ -124,7 +124,7 @@ namespace Neo.UnitTests.Network.RPC
             // construct the script, in this example, we will transfer 10 GAS to receiver
             UInt160 scriptHash = NativeContract.GAS.Hash;
             UInt160 multiAccount = multiContract.Script.ToScriptHash();
-            UInt160 receiver = receiverKey.ToScriptHash();
+            UInt160 receiver = Contract.CreateSignatureContract(receiverKey.PublicKey).ScriptHash;
             byte[] script = scriptHash.MakeScript("transfer", multiAccount, receiver, 1 * NativeContract.GAS.Factor);
 
             // add Cosigners, this is a collection of scripthashs which need to be signed
@@ -162,18 +162,52 @@ namespace Neo.UnitTests.Network.RPC
             }
             KeyPair keyPair = new KeyPair(privateKey);
 
+            // export private key to hex string
+            string privateHex = keyPair.PrivateKey.ToHexString();
+
+            // get KeyPair from private hex string
+            keyPair = Utility.GetKeyPair(privateHex);
+
             // export KeyPair as WIF
             string wif = keyPair.Export();
 
-            // get private key and KeyPair from WIF
-            byte[] privateKey1 = Wallet.GetPrivateKeyFromWIF(wif);
-            KeyPair keyPair1 = new KeyPair(privateKey1);
+            // get KeyPair from WIF
+            KeyPair keyPair1 = Utility.GetKeyPair(wif);
+
+            // export public key hex string
+            string publicHex = keyPair.PublicKey.ToString();
+
+            // get public key from hex string
+            Neo.Cryptography.ECC.ECPoint publicKey = Neo.Cryptography.ECC.ECPoint.Parse(publicHex, Neo.Cryptography.ECC.ECCurve.Secp256r1);
+
+            // get ScriptHash of KeyPair account
+            UInt160 scriptHash = Contract.CreateSignatureContract(keyPair.PublicKey).ScriptHash;
+            string strScriptHash = scriptHash.ToString();
+
+            // get address of KeyPair account
+            string adddress = scriptHash.ToAddress();
+            scriptHash = adddress.ToScriptHash();
+
+            // create wallet
+            string path = "wallet_new.json";
+            string password = "MyPass";
+            NEP6Wallet wallet_new = new NEP6Wallet(path);
+            using (wallet_new.Unlock(password))
+            {
+                wallet_new.CreateAccount(keyPair.PrivateKey);
+            }
+            wallet_new.Save();
 
             // load wallet from nep6 wallet
-            string path = "3.json";
             NEP6Wallet wallet = new NEP6Wallet(path);
+            KeyPair keyPair2;
+            using (wallet.Unlock(password))
+            {
+                keyPair2 = wallet.GetAccounts().Last().GetKey();
+            }
 
             Assert.AreEqual(keyPair, keyPair1);
+            Assert.AreEqual(keyPair, keyPair2);
         }
 
         [TestMethod]
@@ -262,10 +296,10 @@ namespace Neo.UnitTests.Network.RPC
             ContractManifest manifest = ContractManifest.CreateDefault(script.ToScriptHash());
 
             // deploy contract needs sender to pay the system fee
-            KeyPair senderKey = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
+            KeyPair senderKey = Utility.GetKeyPair("L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb");
 
             // create the deploy transaction
-            Transaction transaction = contractClient.DeployContract(script, manifest, senderKey);
+            Transaction transaction = contractClient.CreateDeployContractTx(script, manifest, senderKey);
 
             // Broadcasts the transaction over the NEO network
             client.SendRawTransaction(transaction);
@@ -298,10 +332,10 @@ namespace Neo.UnitTests.Network.RPC
             ContractManifest manifest = ContractManifest.CreateDefault(script.ToScriptHash());
 
             // deploy contract needs sender to pay the system fee
-            KeyPair senderKey = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
+            KeyPair senderKey = Utility.GetKeyPair("L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb");
 
             // create the deploy transaction
-            Transaction transaction = contractClient.DeployContract(script, manifest, senderKey);
+            Transaction transaction = contractClient.CreateDeployContractTx(script, manifest, senderKey);
 
             // Broadcasts the transaction over the NEO network
             client.SendRawTransaction(transaction);

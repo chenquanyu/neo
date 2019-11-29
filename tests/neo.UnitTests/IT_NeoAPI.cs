@@ -18,10 +18,10 @@ namespace Neo.UnitTests.Network.RPC
         [TestInitialize]
         public void TestSetup()
         {
-            key1 = "L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb".ToKeyPair();
-            key2 = "L3TbPZ3Gtqh3TTk2CWn44m9iiuUhBGZWoDJQuvVw5Zbx5NAjPbdb".ToKeyPair();
-            address1 = Neo.Wallets.Helper.ToAddress(key1.ToScriptHash()); // "AJoQgnkK1i7YSAvFbPiPhwtgdccbaQ7rgq"
-            address2 = Neo.Wallets.Helper.ToAddress(key2.ToScriptHash()); // "AKviBGFhWeS8xrAH3hqDQufZXE9QM5pCeP"
+            key1 = Utility.GetKeyPair("L1rFMTamZj85ENnqNLwmhXKAprHuqr1MxMHmCWCGiXGsAdQ2dnhb");
+            key2 = Utility.GetKeyPair("L3TbPZ3Gtqh3TTk2CWn44m9iiuUhBGZWoDJQuvVw5Zbx5NAjPbdb");
+            address1 = Neo.Wallets.Helper.ToAddress(Contract.CreateSignatureRedeemScript(key1.PublicKey).ToScriptHash()); // "AJoQgnkK1i7YSAvFbPiPhwtgdccbaQ7rgq"
+            address2 = Neo.Wallets.Helper.ToAddress(Contract.CreateSignatureRedeemScript(key2.PublicKey).ToScriptHash()); // "AKviBGFhWeS8xrAH3hqDQufZXE9QM5pCeP"
             neoAPI = new WalletAPI(new RpcClient("http://seed1t.neo.org:20332"));
         }
         [TestMethod]
