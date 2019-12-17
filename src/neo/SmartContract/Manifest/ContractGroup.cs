@@ -1,5 +1,6 @@
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
+using Neo.IO;
 using Neo.IO.Json;
 using System;
 
@@ -20,6 +21,15 @@ namespace Neo.SmartContract.Manifest
         /// Signature is the signature of the contract hash.
         /// </summary>
         public byte[] Signature { get; set; }
+
+        public ContractGroup Clone()
+        {
+            return new ContractGroup
+            {
+                PubKey = PubKey,
+                Signature = Signature
+            };
+        }
 
         /// <summary>
         /// Parse ContractManifestGroup from json
@@ -42,7 +52,7 @@ namespace Neo.SmartContract.Manifest
         /// <returns>Return true or false</returns>
         public bool IsValid(UInt160 hash)
         {
-            return Crypto.Default.VerifySignature(hash.ToArray(), Signature, PubKey.EncodePoint(false));
+            return Crypto.VerifySignature(hash.ToArray(), Signature, PubKey.EncodePoint(false));
         }
 
         public virtual JObject ToJson()

@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Neo.UnitTests
@@ -11,7 +11,7 @@ namespace Neo.UnitTests
         [TestInitialize]
         public void Setup()
         {
-            neoSystem = TestBlockchain.InitializeMockNeoSystem();
+            neoSystem = TestBlockchain.TheNeoSystem;
         }
 
         [TestMethod]
@@ -25,8 +25,5 @@ namespace Neo.UnitTests
 
         [TestMethod]
         public void TestGetConsensus() => neoSystem.Consensus.Should().BeNull();
-
-        [TestMethod]
-        public void TestGetRpcServer() => neoSystem.RpcServer.Should().BeNull();
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
@@ -11,6 +12,12 @@ namespace Neo.UnitTests.SmartContract
     [TestClass]
     public class UT_Syscalls
     {
+        [TestInitialize]
+        public void TestSetup()
+        {
+            TestBlockchain.InitializeMockNeoSystem();
+        }
+
         [TestMethod]
         public void System_Blockchain_GetBlock()
         {
@@ -45,12 +52,12 @@ namespace Neo.UnitTests.SmartContract
                 Transactions = new Transaction[] { tx }
             };
 
-            var snapshot = TestBlockchain.GetStore().GetSnapshot();
+            var snapshot = Blockchain.Singleton.GetSnapshot();
 
             using (var script = new ScriptBuilder())
             {
                 script.EmitPush(block.Hash.ToArray());
-                script.EmitSysCall(InteropService.System_Blockchain_GetBlock);
+                script.EmitSysCall(InteropService.Blockchain.GetBlock);
 
                 // Without block
 
@@ -63,12 +70,12 @@ namespace Neo.UnitTests.SmartContract
 
                 // With block
 
-                var blocks = (TestDataCache<UInt256, TrimmedBlock>)snapshot.Blocks;
-                var txs = (TestDataCache<UInt256, TransactionState>)snapshot.Transactions;
+                var blocks = snapshot.Blocks;
+                var txs = snapshot.Transactions;
                 blocks.Add(block.Hash, block.Trim());
                 txs.Add(tx.Hash, new TransactionState() { Transaction = tx, BlockIndex = block.Index, VMState = VMState.HALT });
 
-                script.EmitSysCall(InteropService.Neo_Json_Serialize);
+                script.EmitSysCall(InteropService.Json.Serialize);
                 engine = new ApplicationEngine(TriggerType.Application, null, snapshot, 0, true);
                 engine.LoadScript(script.ToArray());
 
@@ -86,12 +93,124 @@ namespace Neo.UnitTests.SmartContract
         }
 
         [TestMethod]
-        public void System_ExecutionEngine_GetScriptContainer()
+        public void Json_Deserialize()
         {
-            var snapshot = TestBlockchain.GetStore().GetSnapshot();
+            // Good
+
             using (var script = new ScriptBuilder())
             {
-                script.EmitSysCall(InteropService.System_ExecutionEngine_GetScriptContainer);
+                script.EmitPush("123");
+                script.EmitSysCall(InteropService.Json.Deserialize);
+                script.EmitPush("null");
+                script.EmitSysCall(InteropService.Json.Deserialize);
+
+                using (var engine = new ApplicationEngine(TriggerType.Application, null, null, 0, true))
+                {
+                    engine.LoadScript(script.ToArray());
+
+                    Assert.AreEqual(engine.Execute(), VMState.HALT);
+                    Assert.AreEqual(2, engine.ResultStack.Count);
+
+                    Assert.IsTrue(engine.ResultStack.TryPop<Null>(out _));
+                    Assert.IsTrue(engine.ResultStack.TryPop<Integer>(out var i) && i.GetBigInteger() == 123);
+                }
+            }
+
+            // Error 1 - Wrong Json
+
+            using (var script = new ScriptBuilder())
+            {
+                script.EmitPush("***");
+                script.EmitSysCall(InteropService.Json.Deserialize);
+
+                using (var engine = new ApplicationEngine(TriggerType.Application, null, null, 0, true))
+                {
+                    engine.LoadScript(script.ToArray());
+
+                    Assert.AreEqual(engine.Execute(), VMState.FAULT);
+                    Assert.AreEqual(0, engine.ResultStack.Count);
+                }
+            }
+
+            // Error 2 - No decimals
+
+            using (var script = new ScriptBuilder())
+            {
+                script.EmitPush("123.45");
+                script.EmitSysCall(InteropService.Json.Deserialize);
+
+                using (var engine = new ApplicationEngine(TriggerType.Application, null, null, 0, true))
+                {
+                    engine.LoadScript(script.ToArray());
+
+                    Assert.AreEqual(engine.Execute(), VMState.FAULT);
+                    Assert.AreEqual(0, engine.ResultStack.Count);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Json_Serialize()
+        {
+            // Good
+
+            using (var script = new ScriptBuilder())
+            {
+                script.EmitPush(5);
+                script.EmitSysCall(InteropService.Json.Serialize);
+                script.Emit(OpCode.PUSH0);
+                script.Emit(OpCode.NOT);
+                script.EmitSysCall(InteropService.Json.Serialize);
+                script.EmitPush("test");
+                script.EmitSysCall(InteropService.Json.Serialize);
+                script.Emit(OpCode.PUSHNULL);
+                script.EmitSysCall(InteropService.Json.Serialize);
+                script.Emit(OpCode.NEWMAP);
+                script.Emit(OpCode.DUP);
+                script.EmitPush("key");
+                script.EmitPush("value");
+                script.Emit(OpCode.SETITEM);
+                script.EmitSysCall(InteropService.Json.Serialize);
+
+                using (var engine = new ApplicationEngine(TriggerType.Application, null, null, 0, true))
+                {
+                    engine.LoadScript(script.ToArray());
+
+                    Assert.AreEqual(engine.Execute(), VMState.HALT);
+                    Assert.AreEqual(5, engine.ResultStack.Count);
+
+                    Assert.IsTrue(engine.ResultStack.TryPop<ByteArray>(out var m) && m.GetString() == "{\"key\":\"dmFsdWU=\"}");
+                    Assert.IsTrue(engine.ResultStack.TryPop<ByteArray>(out var n) && n.GetString() == "null");
+                    Assert.IsTrue(engine.ResultStack.TryPop<ByteArray>(out var s) && s.GetString() == "\"dGVzdA==\"");
+                    Assert.IsTrue(engine.ResultStack.TryPop<ByteArray>(out var b) && b.GetString() == "true");
+                    Assert.IsTrue(engine.ResultStack.TryPop<ByteArray>(out var i) && i.GetString() == "5");
+                }
+            }
+
+            // Error
+
+            using (var script = new ScriptBuilder())
+            {
+                script.EmitSysCall(InteropService.Storage.GetContext);
+                script.EmitSysCall(InteropService.Json.Serialize);
+
+                using (var engine = new ApplicationEngine(TriggerType.Application, null, null, 0, true))
+                {
+                    engine.LoadScript(script.ToArray());
+
+                    Assert.AreEqual(engine.Execute(), VMState.FAULT);
+                    Assert.AreEqual(0, engine.ResultStack.Count);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void System_ExecutionEngine_GetScriptContainer()
+        {
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            using (var script = new ScriptBuilder())
+            {
+                script.EmitSysCall(InteropService.Runtime.GetScriptContainer);
 
                 // Without tx
 
@@ -104,7 +223,7 @@ namespace Neo.UnitTests.SmartContract
 
                 // With tx
 
-                script.EmitSysCall(InteropService.Neo_Json_Serialize);
+                script.EmitSysCall(InteropService.Json.Serialize);
 
                 var tx = new Transaction()
                 {
@@ -136,14 +255,14 @@ namespace Neo.UnitTests.SmartContract
         public void System_Runtime_GetInvocationCounter()
         {
             ContractState contractA, contractB, contractC;
-            var snapshot = TestBlockchain.GetStore().GetSnapshot();
-            var contracts = (TestDataCache<UInt160, ContractState>)snapshot.Contracts;
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var contracts = snapshot.Contracts;
 
             // Create dummy contracts
 
             using (var script = new ScriptBuilder())
             {
-                script.EmitSysCall(InteropService.System_Runtime_GetInvocationCounter);
+                script.EmitSysCall(InteropService.Runtime.GetInvocationCounter);
 
                 contractA = new ContractState() { Script = new byte[] { (byte)OpCode.DROP, (byte)OpCode.DROP }.Concat(script.ToArray()).ToArray() };
                 contractB = new ContractState() { Script = new byte[] { (byte)OpCode.DROP, (byte)OpCode.DROP, (byte)OpCode.NOP }.Concat(script.ToArray()).ToArray() };
@@ -164,10 +283,10 @@ namespace Neo.UnitTests.SmartContract
 
             using (var script = new ScriptBuilder())
             {
-                script.EmitSysCall(InteropService.System_Contract_Call, contractA.ScriptHash.ToArray(), "dummyMain", 0);
-                script.EmitSysCall(InteropService.System_Contract_Call, contractB.ScriptHash.ToArray(), "dummyMain", 0);
-                script.EmitSysCall(InteropService.System_Contract_Call, contractB.ScriptHash.ToArray(), "dummyMain", 0);
-                script.EmitSysCall(InteropService.System_Contract_Call, contractC.ScriptHash.ToArray(), "dummyMain", 0);
+                script.EmitSysCall(InteropService.Contract.Call, contractA.ScriptHash.ToArray(), "dummyMain", 0);
+                script.EmitSysCall(InteropService.Contract.Call, contractB.ScriptHash.ToArray(), "dummyMain", 0);
+                script.EmitSysCall(InteropService.Contract.Call, contractB.ScriptHash.ToArray(), "dummyMain", 0);
+                script.EmitSysCall(InteropService.Contract.Call, contractC.ScriptHash.ToArray(), "dummyMain", 0);
 
                 // Execute
 

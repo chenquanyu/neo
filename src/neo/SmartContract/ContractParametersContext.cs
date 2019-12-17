@@ -94,7 +94,7 @@ namespace Neo.SmartContract
                         return _ScriptHashes;
                     }
 
-                    using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+                    using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
                     {
                         _ScriptHashes = Verifiable.GetScriptHashesForVerifying(snapshot);
                     }
@@ -144,16 +144,16 @@ namespace Neo.SmartContract
                     int i = 0;
                     switch (contract.Script[i++])
                     {
-                        case 1:
+                        case (byte)OpCode.PUSHINT8:
                             ++i;
                             break;
-                        case 2:
+                        case (byte)OpCode.PUSHINT16:
                             i += 2;
                             break;
                     }
-                    while (contract.Script[i++] == 33)
+                    while (contract.Script[i++] == (byte)OpCode.PUSHDATA1)
                     {
-                        points.Add(ECPoint.DecodePoint(contract.Script.Skip(i).Take(33).ToArray(), ECCurve.Secp256r1));
+                        points.Add(ECPoint.DecodePoint(contract.Script.AsSpan(++i, 33), ECCurve.Secp256r1));
                         i += 33;
                     }
                 }
@@ -256,14 +256,14 @@ namespace Neo.SmartContract
                 ContextItem item = ContextItems[ScriptHashes[i]];
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
-                    foreach (ContractParameter parameter in item.Parameters.Reverse())
+                    for (int j = item.Parameters.Length - 1; j >= 0; j--)
                     {
-                        sb.EmitPush(parameter);
+                        sb.EmitPush(item.Parameters[j]);
                     }
                     witnesses[i] = new Witness
                     {
                         InvocationScript = sb.ToArray(),
-                        VerificationScript = item.Script ?? new byte[0]
+                        VerificationScript = item.Script ?? Array.Empty<byte>()
                     };
                 }
             }

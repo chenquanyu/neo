@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.ECC;
+using Neo.IO;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -22,27 +23,28 @@ namespace Neo.UnitTests.VMT
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.Emit(new OpCode[] { OpCode.PUSH0 });
-            Assert.AreEqual(Encoding.Default.GetString(new byte[] { 0x00 }), Encoding.Default.GetString(sb.ToArray()));
+            CollectionAssert.AreEqual(new[] { (byte)OpCode.PUSH0 }, sb.ToArray());
         }
 
         [TestMethod]
         public void TestEmitAppCall1()
         {
-            //format:(byte)0x00+(byte)OpCode.NEWARRAY+(string)operation+(Uint160)scriptHash+(uint)InteropService.System_Contract_Call
+            //format:(byte)0x10+(byte)OpCode.NEWARRAY+(string)operation+(Uint160)scriptHash+(uint)InteropService.System_Contract_Call
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitAppCall(UInt160.Zero, "AAAAA");
-            byte[] tempArray = new byte[34];
-            tempArray[0] = 0x00;//0
-            tempArray[1] = 0xC5;//OpCode.NEWARRAY 
-            tempArray[2] = 5;//operation.Length
-            Array.Copy(Encoding.UTF8.GetBytes("AAAAA"), 0, tempArray, 3, 5);//operation.data
-            tempArray[8] = 0x14;//scriptHash.Length
-            Array.Copy(UInt160.Zero.ToArray(), 0, tempArray, 9, 20);//operation.data
-            uint api = InteropService.System_Contract_Call;
-            tempArray[29] = 0x68;//OpCode.SYSCALL
-            Array.Copy(BitConverter.GetBytes(api), 0, tempArray, 30, 4);//api.data
-            byte[] resultArray = sb.ToArray();
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(resultArray));
+            byte[] tempArray = new byte[36];
+            tempArray[0] = (byte)OpCode.PUSH0;
+            tempArray[1] = (byte)OpCode.NEWARRAY;
+            tempArray[2] = (byte)OpCode.PUSHDATA1;
+            tempArray[3] = 5;//operation.Length
+            Array.Copy(Encoding.UTF8.GetBytes("AAAAA"), 0, tempArray, 4, 5);//operation.data
+            tempArray[9] = (byte)OpCode.PUSHDATA1;
+            tempArray[10] = 0x14;//scriptHash.Length
+            Array.Copy(UInt160.Zero.ToArray(), 0, tempArray, 11, 20);//operation.data
+            uint api = InteropService.Contract.Call;
+            tempArray[31] = (byte)OpCode.SYSCALL;
+            Array.Copy(BitConverter.GetBytes(api), 0, tempArray, 32, 4);//api.data
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         [TestMethod]
@@ -51,19 +53,20 @@ namespace Neo.UnitTests.VMT
             //format:(ContractParameter[])ContractParameter+(byte)OpCode.PACK+(string)operation+(Uint160)scriptHash+(uint)InteropService.System_Contract_Call
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitAppCall(UInt160.Zero, "AAAAA", new ContractParameter[] { new ContractParameter(ContractParameterType.Integer) });
-            byte[] tempArray = new byte[35];
-            tempArray[0] = 0x00;//0
-            tempArray[1] = 0x51;//ContractParameter.Length 
-            tempArray[2] = 0xC1;//OpCode.PACK
-            tempArray[3] = 0x05;//operation.Length
-            Array.Copy(Encoding.UTF8.GetBytes("AAAAA"), 0, tempArray, 4, 5);//operation.data
-            tempArray[9] = 0x14;//scriptHash.Length
-            Array.Copy(UInt160.Zero.ToArray(), 0, tempArray, 10, 20);//operation.data
-            uint api = InteropService.System_Contract_Call;
-            tempArray[30] = 0x68;//OpCode.SYSCALL
-            Array.Copy(BitConverter.GetBytes(api), 0, tempArray, 31, 4);//api.data
-            byte[] resultArray = sb.ToArray();
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(resultArray));
+            byte[] tempArray = new byte[37];
+            tempArray[0] = (byte)OpCode.PUSH0;
+            tempArray[1] = (byte)OpCode.PUSH1;
+            tempArray[2] = (byte)OpCode.PACK;
+            tempArray[3] = (byte)OpCode.PUSHDATA1;
+            tempArray[4] = 0x05;//operation.Length
+            Array.Copy(Encoding.UTF8.GetBytes("AAAAA"), 0, tempArray, 5, 5);//operation.data
+            tempArray[10] = (byte)OpCode.PUSHDATA1;
+            tempArray[11] = 0x14;//scriptHash.Length
+            Array.Copy(UInt160.Zero.ToArray(), 0, tempArray, 12, 20);//operation.data
+            uint api = InteropService.Contract.Call;
+            tempArray[32] = (byte)OpCode.SYSCALL;
+            Array.Copy(BitConverter.GetBytes(api), 0, tempArray, 33, 4);//api.data
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         [TestMethod]
@@ -72,19 +75,20 @@ namespace Neo.UnitTests.VMT
             //format:(object[])args+(byte)OpCode.PACK+(string)operation+(Uint160)scriptHash+(uint)InteropService.System_Contract_Call
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitAppCall(UInt160.Zero, "AAAAA", true);
-            byte[] tempArray = new byte[35];
-            tempArray[0] = 0x51;//arg
-            tempArray[1] = 0x51;//args.Length 
-            tempArray[2] = 0xC1;//OpCode.PACK
-            tempArray[3] = 0x05;//operation.Length
-            Array.Copy(Encoding.UTF8.GetBytes("AAAAA"), 0, tempArray, 4, 5);//operation.data
-            tempArray[9] = 0x14;//scriptHash.Length
-            Array.Copy(UInt160.Zero.ToArray(), 0, tempArray, 10, 20);//operation.data
-            uint api = InteropService.System_Contract_Call;
-            tempArray[30] = 0x68;//OpCode.SYSCALL
-            Array.Copy(BitConverter.GetBytes(api), 0, tempArray, 31, 4);//api.data
-            byte[] resultArray = sb.ToArray();
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(resultArray));
+            byte[] tempArray = new byte[37];
+            tempArray[0] = (byte)OpCode.PUSH1;//arg
+            tempArray[1] = (byte)OpCode.PUSH1;//args.Length 
+            tempArray[2] = (byte)OpCode.PACK;
+            tempArray[3] = (byte)OpCode.PUSHDATA1;
+            tempArray[4] = 0x05;//operation.Length
+            Array.Copy(Encoding.UTF8.GetBytes("AAAAA"), 0, tempArray, 5, 5);//operation.data
+            tempArray[10] = (byte)OpCode.PUSHDATA1;
+            tempArray[11] = 0x14;//scriptHash.Length
+            Array.Copy(UInt160.Zero.ToArray(), 0, tempArray, 12, 20);//operation.data
+            uint api = InteropService.Contract.Call;
+            tempArray[32] = (byte)OpCode.SYSCALL;
+            Array.Copy(BitConverter.GetBytes(api), 0, tempArray, 33, 4);//api.data
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         [TestMethod]
@@ -92,7 +96,7 @@ namespace Neo.UnitTests.VMT
         {
             byte[] testScript = NativeContract.GAS.Hash.MakeScript("balanceOf", UInt160.Zero);
 
-            Assert.AreEqual("14000000000000000000000000000000000000000051c10962616c616e63654f66142582d1b275e86c8f0e93a9b2facd5fdb760976a168627d5b52",
+            Assert.AreEqual("0c14000000000000000000000000000000000000000011c10c0962616c616e63654f660c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
                             testScript.ToHexString());
         }
 
@@ -114,7 +118,7 @@ namespace Neo.UnitTests.VMT
             StackItem arrayItem = new VM.Types.Array(new[] { byteItem, boolItem, intItem, interopItem });
             Assert.AreEqual(1000, (BigInteger)(arrayItem.ToParameter().Value as List<ContractParameter>)[2].Value);
 
-            StackItem mapItem = new Map(new Dictionary<PrimitiveType, StackItem> { [(PrimitiveType)byteItem] = intItem });
+            StackItem mapItem = new Map { [(PrimitiveType)byteItem] = intItem };
             Assert.AreEqual(1000, (BigInteger)(mapItem.ToParameter().Value as List<KeyValuePair<ContractParameter, ContractParameter>>)[0].Value.Value);
         }
 
@@ -157,9 +161,10 @@ namespace Neo.UnitTests.VMT
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(UInt160.Zero);
-            byte[] tempArray = new byte[21];
-            tempArray[0] = 0x14;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[22];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x14;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         [TestMethod]
@@ -191,47 +196,51 @@ namespace Neo.UnitTests.VMT
             parameter.Value = values;
             sb.EmitPush(parameter);
             byte[] tempArray = new byte[4];
-            tempArray[0] = 0x00;
-            tempArray[1] = 0x00;
-            tempArray[2] = 0x52;
-            tempArray[3] = 0xC1;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            tempArray[1] = (byte)OpCode.PUSH0;
+            tempArray[2] = (byte)OpCode.PUSH2;
+            tempArray[3] = (byte)OpCode.PACK;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2String()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new ContractParameter(ContractParameterType.String));
-            byte[] tempArray = new byte[1];
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[2];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2PublicKey()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new ContractParameter(ContractParameterType.PublicKey));
-            byte[] tempArray = new byte[34];
-            tempArray[0] = 0x21;
-            Array.Copy(ECCurve.Secp256r1.G.EncodePoint(true), 0, tempArray, 1, 33);
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[35];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x21;
+            Array.Copy(ECCurve.Secp256r1.G.EncodePoint(true), 0, tempArray, 2, 33);
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2Hash256()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new ContractParameter(ContractParameterType.Hash256));
-            byte[] tempArray = new byte[33];
-            tempArray[0] = 0x20;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[34];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x20;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2Hash160()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new ContractParameter(ContractParameterType.Hash160));
-            byte[] tempArray = new byte[21];
-            tempArray[0] = 0x14;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[22];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x14;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2BigInteger()
@@ -243,8 +252,8 @@ namespace Neo.UnitTests.VMT
             };
             sb.EmitPush(parameter);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2Integer()
@@ -253,8 +262,8 @@ namespace Neo.UnitTests.VMT
             ContractParameter parameter = new ContractParameter(ContractParameterType.Integer);
             sb.EmitPush(parameter);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2Boolean()
@@ -262,26 +271,28 @@ namespace Neo.UnitTests.VMT
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new ContractParameter(ContractParameterType.Boolean));
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2ByteArray()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new ContractParameter(ContractParameterType.ByteArray));
-            byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[2];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x00;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush2Signature()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new ContractParameter(ContractParameterType.Signature));
-            byte[] tempArray = new byte[65];
-            tempArray[0] = 0x40;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[66];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x40;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         enum TestEnum : byte
@@ -318,8 +329,8 @@ namespace Neo.UnitTests.VMT
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(TestEnum.case1);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Ulong()
@@ -328,8 +339,8 @@ namespace Neo.UnitTests.VMT
             ulong temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Long()
@@ -338,8 +349,8 @@ namespace Neo.UnitTests.VMT
             long temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Uint()
@@ -348,8 +359,8 @@ namespace Neo.UnitTests.VMT
             uint temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Int()
@@ -358,8 +369,8 @@ namespace Neo.UnitTests.VMT
             int temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Ushort()
@@ -368,8 +379,8 @@ namespace Neo.UnitTests.VMT
             ushort temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Short()
@@ -378,8 +389,8 @@ namespace Neo.UnitTests.VMT
             short temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Byte()
@@ -388,8 +399,8 @@ namespace Neo.UnitTests.VMT
             byte temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Sbyte()
@@ -398,17 +409,18 @@ namespace Neo.UnitTests.VMT
             sbyte temp = 0;
             VM.Helper.EmitPush(sb, temp);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3ISerializable()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(UInt160.Zero);
-            byte[] tempArray = new byte[21];
-            tempArray[0] = 0x14;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[22];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x14;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3BigInteger()
@@ -416,27 +428,29 @@ namespace Neo.UnitTests.VMT
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(BigInteger.Zero);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH0;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3String()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush("");
-            byte[] tempArray = new byte[1];
-            tempArray[0] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            byte[] tempArray = new byte[2];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
+            tempArray[1] = 0x00;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3ByteArray()
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(new byte[] { 0x01 });
-            byte[] tempArray = new byte[2];
-            tempArray[0] = 0x01;
+            byte[] tempArray = new byte[3];
+            tempArray[0] = (byte)OpCode.PUSHDATA1;
             tempArray[1] = 0x01;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[2] = 0x01;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         private void TestEmitPush3Bool()
@@ -444,8 +458,8 @@ namespace Neo.UnitTests.VMT
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitPush(true);
             byte[] tempArray = new byte[1];
-            tempArray[0] = 0x51;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            tempArray[0] = (byte)OpCode.PUSH1;
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         [TestMethod]
@@ -454,13 +468,13 @@ namespace Neo.UnitTests.VMT
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitSysCall(0, true);
             byte[] tempArray = new byte[6];
-            tempArray[0] = 0x51;
-            tempArray[1] = 0x68;
+            tempArray[0] = (byte)OpCode.PUSH1;
+            tempArray[1] = (byte)OpCode.SYSCALL;
             tempArray[2] = 0x00;
             tempArray[3] = 0x00;
             tempArray[4] = 0x00;
             tempArray[5] = 0x00;
-            Assert.AreEqual(Encoding.Default.GetString(tempArray), Encoding.Default.GetString(sb.ToArray()));
+            CollectionAssert.AreEqual(tempArray, sb.ToArray());
         }
 
         [TestMethod]
